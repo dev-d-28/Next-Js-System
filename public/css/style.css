@@ -1073,9 +1073,31 @@ textarea.form-control {
   .page-header > div:first-child { width: 100%; }
 
   /* Stats */
-  .stats-grid { gap: 12px; }
-  .stat-card { padding: 18px; }
-  .stat-value { font-size: 26px; }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 14px 12px;
+  }
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+  .stat-label {
+    font-size: 11px;
+    margin-top: 4px;
+    line-height: 1.2;
+  }
+  .stat-amount {
+    font-size: 11px;
+    margin-top: 2px;
+  }
 
   /* Cards */
   .card-header {
@@ -1176,10 +1198,7 @@ textarea.form-control {
 
 /* ── Small Mobile (≤ 480px) ─────────────────────────────────── */
 @media (max-width: 480px) {
-  .stats-grid { gap: 10px; }
-  .stat-card { padding: 16px; }
-  .stat-value { font-size: 22px; }
-  .stat-icon { width: 40px; height: 40px; font-size: 18px; }
+  /* Stats styling is inherited from max-width: 768px media query */
 
   .page-title { font-size: 20px; }
   .card-title { font-size: 14px; }
