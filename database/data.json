@@ -1,0 +1,124 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "created_at": "2026-06-18T07:06:28.654Z",
+      "updated_at": "2026-06-18T07:06:28.654Z",
+      "username": "admin",
+      "password_hash": "$2a$10$n8dLWNUtgUaJ.t.idubFkObd.Bxtq2c7gEETWj0Guna.kNMxVTdsC"
+    }
+  ],
+  "clients": [],
+  "invoices": [
+    {
+      "id": 1,
+      "created_at": "2026-06-18T07:09:31.758Z",
+      "updated_at": "2026-06-18T07:09:31.758Z",
+      "invoice_number": "INV-1001",
+      "date": "2026-06-18",
+      "due_date": "2026-07-18",
+      "client_id": null,
+      "client_name": "Dev",
+      "client_address": "Sargsan",
+      "status": "unpaid",
+      "subtotal": 6000,
+      "discount_type": "percentage",
+      "discount_value": 0,
+      "discount_amount": 0,
+      "tax_total": 0,
+      "grand_total": 6000,
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "created_at": "2026-06-19T05:36:03.233Z",
+      "updated_at": "2026-06-19T05:36:03.233Z",
+      "invoice_number": "INV-1002",
+      "date": "2026-06-19",
+      "due_date": "2026-07-19",
+      "client_id": null,
+      "client_name": "Vishal Bhai",
+      "client_address": "",
+      "status": "unpaid",
+      "subtotal": 55700,
+      "discount_type": "percentage",
+      "discount_value": 10,
+      "discount_amount": 5570,
+      "tax_total": 4970,
+      "grand_total": 55100,
+      "notes": ""
+    }
+  ],
+  "invoice_items": [
+    {
+      "id": 1,
+      "created_at": "2026-06-18T07:09:31.758Z",
+      "updated_at": "2026-06-18T07:09:31.758Z",
+      "invoice_id": 1,
+      "name": "Serivicing ",
+      "description": "Complete Service",
+      "quantity": 1,
+      "unit_price": 6000,
+      "tax_pct": 0,
+      "tax_amount": 0,
+      "total": 6000,
+      "sort_order": 0
+    },
+    {
+      "id": 2,
+      "created_at": "2026-06-19T05:36:03.241Z",
+      "updated_at": "2026-06-19T05:36:03.241Z",
+      "invoice_id": 2,
+      "name": "Servicing",
+      "description": "Checking in AC",
+      "quantity": 9.94,
+      "unit_price": 5000,
+      "tax_pct": 10,
+      "tax_amount": 4970,
+      "total": 54670,
+      "sort_order": 0
+    },
+    {
+      "id": 3,
+      "created_at": "2026-06-19T05:36:03.241Z",
+      "updated_at": "2026-06-19T05:36:03.241Z",
+      "invoice_id": 2,
+      "name": "Reparing ",
+      "description": "repairing",
+      "quantity": 1,
+      "unit_price": 6000,
+      "tax_pct": 0,
+      "tax_amount": 0,
+      "total": 6000,
+      "sort_order": 1
+    }
+  ],
+  "settings": {
+    "company_name": "KEYUR DASADIYA",
+    "company_tagline": "AT INDIGO FIRES",
+    "company_address": "123 Business Street",
+    "company_city": "Ahmedabad, Gujarat - 380001",
+    "company_phone": "+91 98765 43210",
+    "company_email": "keyur@indigofires.com",
+    "company_website": "www.indigofires.com",
+    "company_gstin": "24AAAAA0000A1Z5",
+    "bank_name": "Bonate National Bank",
+    "bank_account": "1234 5678 9012",
+    "bank_ifsc": "BONA0001234",
+    "bank_branch": "Ahmedabad Main Branch",
+    "bank_upi": "keyur@upi",
+    "currency": "₹",
+    "currency_code": "INR",
+    "tax_label": "GST",
+    "invoice_prefix": "INV",
+    "invoice_start": "1001",
+    "logo_data": "",
+    "theme_color": "#1B1869"
+  },
+  "_seq": {
+    "users": 1,
+    "clients": 0,
+    "invoices": 2,
+    "invoice_items": 3
+  }
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Invoice Generator</title>
+  <meta name="description" content="Professional PDF Invoice Generator — manage clients, create and download invoices"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/css/style.css"/>
+</head>
+<body>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="44,8 18,42 36,42 26,72 62,32 44,32 56,8" fill="white"/>
+      </svg>
+    </div>
+    <div>
+      <div class="sb-brand">InvoiceGen</div>
+      <div class="sb-brand-sub">Pro Edition</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main Menu</div>
+
+    <a href="#dashboard" class="nav-item" data-route="dashboard" id="nav-dashboard">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+      </svg>
+      <span>Dashboard</span>
+    </a>
+
+    <a href="#invoices" class="nav-item" data-route="invoices" id="nav-invoices">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <span>Invoices</span>
+    </a>
+
+    <a href="#invoices/new" class="nav-item" data-route="invoice-new" id="nav-invoice-new">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="16"/>
+        <line x1="8" y1="12" x2="16" y2="12"/>
+      </svg>
+      <span>New Invoice</span>
+    </a>
+
+    <div class="nav-section-label">Management</div>
+
+    <a href="#clients" class="nav-item" data-route="clients" id="nav-clients">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      <span>Clients</span>
+    </a>
+
+    <a href="#settings" class="nav-item" data-route="settings" id="nav-settings">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2"/>
+      </svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">A</div>
+      <div>
+        <div class="user-name" id="userName">Admin</div>
+        <div class="user-role">Administrator</div>
+      </div>
+    </div>
+    <button class="btn-logout" id="logoutBtn" title="Logout">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  </div>
+</aside>
+
+<!-- Sidebar overlay (mobile backdrop) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ── MAIN CONTENT ─────────────────────────────────────────────────────── -->
+<main class="main-content" id="mainContent">
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <button class="hamburger" id="hamburger">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <span class="mobile-title">InvoiceGen</span>
+  </div>
+
+  <!-- Page content rendered here by JS router -->
+  <div id="pageContent" class="page-content">
+    <div class="loading-screen">
+      <div class="spinner"></div>
+      <p>Loading...</p>
+    </div>
+  </div>
+</main>
+
+<!-- ── TOAST NOTIFICATION ───────────────────────────────────────────────── -->
+<div id="toast" class="toast"></div>
+
+<!-- ── PDF PREVIEW MODAL ────────────────────────────────────────────────── -->
+<div id="pdfModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box modal-pdf">
+    <div class="modal-header">
+      <h3 id="pdfModalTitle">Invoice Preview</h3>
+      <div class="modal-actions">
+        <button id="pdfDownloadBtn" class="btn btn-primary btn-sm" title="Download as PDF"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF</button>
+        <button id="pdfPrintBtn" class="btn btn-outline btn-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Print</button>
+        <button id="pdfCloseBtn" class="btn btn-ghost btn-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Close</button>
+      </div>
+    </div>
+    <div class="pdf-preview-body">
+      <iframe id="pdfFrame" src="" frameborder="0"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- ── CONFIRM MODAL ────────────────────────────────────────────────────── -->
+<div id="confirmModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box modal-confirm">
+    <div class="confirm-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5" width="48" height="48"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmMessage">This action cannot be undone.</p>
+    <div class="confirm-actions">
+      <button id="confirmNo" class="btn btn-outline">Cancel</button>
+      <button id="confirmYes" class="btn btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP SCRIPTS ───────────────────────────────────────────────────────── -->
+<script src="/js/app.js"></script>
+</body>
+</html>
