@@ -379,33 +379,6 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
     .invoice-shell{border-radius:0;box-shadow:none;}
     .toolbar{padding:10px 12px;background:#F4F4F4;justify-content:stretch;margin-bottom:0;}
     .toolbar button{flex:1;justify-content:center;font-size:12px;padding:10px 12px;}
-
-    .inv-header{padding:16px;}
-    .inv-title{font-size:28px;letter-spacing:2px;}
-    .inv-company-name{font-size:15px;}
-    .inv-logo-box{width:44px;height:44px;}
-
-    .inv-info-band{padding:14px 16px;flex-direction:column;gap:14px;}
-    .inv-details{min-width:0;width:100%;}
-
-    .items-section{padding:14px 0 0;}
-    .items-scroll{padding:0 16px;}
-
-    .bottom-section{padding:14px 16px;flex-direction:column;gap:16px;}
-    .bank-panel,.totals-panel{width:100%;min-width:0;}
-
-    .notes-section{padding:0 16px 14px;}
-    .inv-footer{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:8px;}
-    .footer-brand{text-align:left;}
-  }
-
-  /* ── Very small (≤ 400px) ── */
-  @media (max-width:400px){
-    .inv-title{font-size:22px;}
-    .inv-company-name{font-size:13px;}
-    .inv-header{flex-direction:column;}
-    .inv-header-right{text-align:left;}
-    .grand-value{font-size:16px;}
   }
 </style>
 </head>
@@ -534,14 +507,28 @@ window.addEventListener("load", () => {
 
   setTimeout(() => {
     const element = document.querySelector('.invoice-shell');
+    
+    // Force exact desktop dimensions to prevent mobile squishing/cutting
+    const origWidth = element.style.width;
+    const origMaxWidth = element.style.maxWidth;
+    const origMargin = element.style.margin;
+    element.style.width = '800px';
+    element.style.maxWidth = '800px';
+    element.style.margin = '0';
+
     const opt = {
       margin:       0,
       filename:     'Invoice-${esc(invoice.invoice_number)}.pdf',
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
+      html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save().then(() => {
+      // Restore styles
+      element.style.width = origWidth;
+      element.style.maxWidth = origMaxWidth;
+      element.style.margin = origMargin;
+      
       if (toolbar) toolbar.style.display = 'flex';
     });
   }, 800);
