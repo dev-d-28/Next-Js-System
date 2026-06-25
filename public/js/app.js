@@ -241,15 +241,24 @@ async function renderDashboard() {
 
     const recentRows = stats.recent.map(inv => `
       <tr>
-        <td class="td-bold">${inv.invoice_number}</td>
-        <td>${inv.client_name}</td>
-        <td>${fmtDate(inv.date)}</td>
-        <td class="td-right td-bold">${fmt(inv.grand_total)}</td>
-        <td><span class="badge badge-${inv.status}">${inv.status}</span></td>
-        <td class="td-center">
-          <div class="action-btns">
-            <button class="btn btn-outline btn-sm" onclick="navigate('invoices/${inv.id}')">View</button>
-            <button class="btn btn-primary btn-sm" onclick="openPDF(${inv.id}, '${inv.invoice_number}')">PDF</button>
+        <td data-label="Invoice #" class="td-bold">${inv.invoice_number}</td>
+        <td data-label="Client">${inv.client_name}</td>
+        <td data-label="Date">${fmtDate(inv.date)}</td>
+        <td data-label="Amount" class="td-right td-bold">${fmt(inv.grand_total)}</td>
+        <td data-label="Status"><span class="badge badge-${inv.status}">${inv.status}</span></td>
+        <td data-label="Actions" class="td-center">
+          <div class="dropdown">
+            <button class="btn btn-outline btn-sm dropdown-btn">Actions ▼</button>
+            <div class="dropdown-menu">
+              <button onclick="navigate('invoices/${inv.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                View
+              </button>
+              <button onclick="openPDF(${inv.id}, '${inv.invoice_number}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                PDF
+              </button>
+            </div>
           </div>
         </td>
       </tr>
@@ -297,7 +306,7 @@ async function renderDashboard() {
           <span class="card-title">Recent Invoices</span>
           <button class="btn btn-ghost btn-sm" onclick="navigate('invoices')">View All</button>
         </div>
-        <div class="table-container">
+        <div class="table-container responsive-table">
           <table>
             <thead>
               <tr>
