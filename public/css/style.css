@@ -1336,3 +1336,34 @@ textarea.form-control {
   .inv-form-section-header { font-size: 12px; padding: 12px 14px; }
 }
 
+
+
+/* Dropdown Actions Menu */
+.dropdown { position: relative; display: inline-block; text-align: left; }
+.dropdown-btn { display: flex; align-items: center; gap: 4px; }
+.dropdown-menu { display: none; position: absolute; right: 0; top: 100%; background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 50; min-width: 140px; padding: 4px 0; margin-top: 4px; }
+.dropdown:focus-within .dropdown-menu, .dropdown:hover .dropdown-menu { display: block; }
+.dropdown-menu button { width: 100%; text-align: left; background: none; border: none; padding: 8px 16px; font-size: 13px; color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.dropdown-menu button:hover { background: var(--bg-hover); }
+.dropdown-menu button.text-danger { color: var(--danger); }
+
+@media (max-width: 768px) {
+  /* Responsive Table layout (Cards) */
+  .responsive-table { overflow-x: visible; }
+  .responsive-table table { display: block; min-width: 0; border: none; }
+  .responsive-table thead { display: none; }
+  .responsive-table tbody { display: block; width: 100%; }
+  .responsive-table tr { display: flex; flex-direction: column; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; padding: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+  .responsive-table td { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 14px; text-align: right; }
+  .responsive-table td:last-child { border-bottom: none; padding-bottom: 0; }
+  .responsive-table td::before { content: attr(data-label); font-weight: 600; color: var(--text-secondary); text-transform: uppercase; font-size: 11px; margin-right: 16px; text-align: left; white-space: nowrap; }
+  .responsive-table .action-btns { justify-content: flex-end; width: 100%; flex-wrap: wrap; gap: 6px; }
+  .responsive-table td[data-label="Actions"] { justify-content: flex-end; }
+  .responsive-table td[data-label="Actions"]::before { display: none; }
+}
+
+
+@media (max-width: 768px) {
+  .responsive-table td input, .responsive-table td select { width: auto !important; max-width: 60%; text-align: right !important; }
+}
+

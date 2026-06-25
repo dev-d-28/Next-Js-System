@@ -410,32 +410,42 @@ async function fetchAndRenderInvoices() {
     const data = await api(`/invoices?${params}`);
     const rows = data.invoices.map(inv => `
       <tr>
-        <td class="td-bold" style="color:var(--primary)">${inv.invoice_number}</td>
-        <td>
-          <div style="font-weight:600;">${inv.client_name}</div>
-          <div class="td-muted" style="font-size:12px;">${inv.client_email || ''}</div>
+        <td data-label="Invoice #" class="td-bold" style="color:var(--primary)">${inv.invoice_number}</td>
+        <td data-label="Client">
+          <div style="text-align: right;">
+            <div style="font-weight:600;">${inv.client_name}</div>
+            <div class="td-muted" style="font-size:12px;">${inv.client_email || ''}</div>
+          </div>
         </td>
-        <td>${fmtDate(inv.date)}</td>
-        <td>${fmtDate(inv.due_date)}</td>
-        <td class="td-right td-bold">${fmt(inv.grand_total)}</td>
-        <td><span class="badge badge-${inv.status}">${inv.status}</span></td>
-        <td>
-          <div class="action-btns">
-            <button class="btn btn-icon btn-outline" title="View" onclick="navigate('invoices/${inv.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-            <button class="btn btn-icon btn-outline" title="Edit" onclick="navigate('invoices/${inv.id}/edit')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </button>
-            <button class="btn btn-icon btn-primary" title="PDF" onclick="openPDF(${inv.id}, '${inv.invoice_number}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </button>
-            <button class="btn btn-icon btn-ghost" title="Duplicate" onclick="duplicateInvoice(${inv.id})">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-            <button class="btn btn-icon" style="background:#fee2e2;color:#ef4444;" title="Delete" onclick="deleteInvoice(${inv.id}, '${inv.invoice_number}')">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            </button>
+        <td data-label="Date">${fmtDate(inv.date)}</td>
+        <td data-label="Due Date">${fmtDate(inv.due_date)}</td>
+        <td data-label="Amount" class="td-right td-bold">${fmt(inv.grand_total)}</td>
+        <td data-label="Status"><span class="badge badge-${inv.status}">${inv.status}</span></td>
+        <td data-label="Actions">
+          <div class="dropdown">
+            <button class="btn btn-outline btn-sm dropdown-btn">Actions ▼</button>
+            <div class="dropdown-menu">
+              <button onclick="navigate('invoices/${inv.id}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                View
+              </button>
+              <button onclick="navigate('invoices/${inv.id}/edit')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </button>
+              <button onclick="openPDF(${inv.id}, '${inv.invoice_number}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                PDF
+              </button>
+              <button onclick="duplicateInvoice(${inv.id})">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Duplicate
+              </button>
+              <button class="text-danger" onclick="deleteInvoice(${inv.id}, '${inv.invoice_number}')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Delete
+              </button>
+            </div>
           </div>
         </td>
       </tr>
@@ -458,7 +468,7 @@ async function fetchAndRenderInvoices() {
     `).join('');
 
     area.innerHTML = `
-      <div class="table-container">
+      <div class="table-container responsive-table">
         <table>
           <thead>
             <tr>
@@ -715,7 +725,7 @@ async function renderInvoiceForm(editId) {
           Add Item
         </button>
       </div>
-      <div class="items-table-wrapper">
+      <div class="items-table-wrapper responsive-table">
         <table class="invoice-items-table">
           <thead>
             <tr>
@@ -827,26 +837,26 @@ function renderItemsTable() {
 
     return `
       <tr data-idx="${idx}">
-        <td style="text-align:center;color:var(--text-muted);font-size:12px;font-weight:600;">${idx+1}</td>
-        <td><input type="text" placeholder="Service / Product name" value="${escVal(item.name)}"
+        <td data-label="Sr. No." style="text-align:center;color:var(--text-muted);font-size:12px;font-weight:600;">${idx+1}</td>
+        <td data-label="Service / Product"><input type="text" placeholder="Service / Product name" value="${escVal(item.name)}"
               oninput="invoiceItems[${idx}].name=this.value"/></td>
-        <td style="text-align:center;">
+        <td data-label="Qty" style="text-align:center;">
           <input type="number" min="0.01" step="0.01" value="${item.quantity}"
               style="text-align:center;"
               oninput="invoiceItems[${idx}].quantity=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
         </td>
-        <td>
+        <td data-label="Unit Price">
           <input type="number" min="0" step="0.01" value="${item.unit_price}"
               style="text-align:right;"
               oninput="invoiceItems[${idx}].unit_price=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
         </td>
-        <td style="text-align:center;">
+        <td data-label="${globalSettings.tax_label||'GST'}%" style="text-align:center;">
           <input type="number" min="0" max="100" step="0.01" value="${item.tax_pct||0}"
               style="text-align:center;"
               oninput="invoiceItems[${idx}].tax_pct=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
         </td>
-        <td class="item-total-cell" id="row-total-${idx}">${fmt(total)}</td>
-        <td style="text-align:center;">
+        <td data-label="Total" class="item-total-cell" id="row-total-${idx}">${fmt(total)}</td>
+        <td data-label="Remove" style="text-align:center;">
           <button class="btn-remove-item" onclick="removeItem(${idx})" title="Remove item">×</button>
         </td>
       </tr>

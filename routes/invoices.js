@@ -525,7 +525,28 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
 
 </div><!-- end invoice-shell -->
 
-${autoPrint ? '<script>window.addEventListener("load",()=>setTimeout(()=>window.print(),800));</script>' : ''}
+${autoPrint ? `
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+window.addEventListener("load", () => {
+  const toolbar = document.querySelector('.toolbar');
+  if (toolbar) toolbar.style.display = 'none';
+
+  setTimeout(() => {
+    const element = document.querySelector('.invoice-shell');
+    const opt = {
+      margin:       0,
+      filename:     'Invoice-${esc(invoice.invoice_number)}.pdf',
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save().then(() => {
+      if (toolbar) toolbar.style.display = 'flex';
+    });
+  }, 800);
+});
+</script>` : ''}
 </body>
 </html>`;
 }
