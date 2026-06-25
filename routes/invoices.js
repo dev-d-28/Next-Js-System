@@ -508,19 +508,29 @@ window.addEventListener("load", () => {
   setTimeout(() => {
     const element = document.querySelector('.invoice-shell');
     
-    // Force exact desktop dimensions to prevent mobile squishing/cutting
+    // Force exact desktop dimensions and absolute top-left position 
+    // to prevent mobile browser from centering it into negative space (which causes cropping)
     const origWidth = element.style.width;
     const origMaxWidth = element.style.maxWidth;
     const origMargin = element.style.margin;
+    const origPos = element.style.position;
+    const origLeft = element.style.left;
+    const origTop = element.style.top;
+    
     element.style.width = '800px';
     element.style.maxWidth = '800px';
     element.style.margin = '0';
+    element.style.position = 'absolute';
+    element.style.left = '0';
+    element.style.top = '0';
+
+    window.scrollTo(0, 0);
 
     const opt = {
       margin:       0,
       filename:     'Invoice-${esc(invoice.invoice_number)}.pdf',
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 800 },
       jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save().then(() => {
@@ -528,6 +538,9 @@ window.addEventListener("load", () => {
       element.style.width = origWidth;
       element.style.maxWidth = origMaxWidth;
       element.style.margin = origMargin;
+      element.style.position = origPos;
+      element.style.left = origLeft;
+      element.style.top = origTop;
       
       if (toolbar) toolbar.style.display = 'flex';
     });
