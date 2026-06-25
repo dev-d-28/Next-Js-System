@@ -641,12 +641,12 @@ textarea.form-control {
   gap: 8px;
 }
 
-.items-table-wrapper { overflow-x: auto; }
+.items-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .invoice-items-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 580px;
 }
 
 .invoice-items-table thead th {
@@ -708,6 +708,86 @@ textarea.form-control {
 }
 
 .btn-remove-item:hover { background: #fecaca; }
+
+/* ── INVOICE FORM SECTIONS (single-page layout) ──────────────── */
+.inv-form-section {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.inv-form-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4fa 100%);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.inv-form-section-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.inv-form-section-body {
+  padding: 24px;
+}
+
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Discount inline layout */
+.discount-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.discount-inline-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Totals layout: discount section + totals panel side by side */
+.inv-totals-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.inv-totals-layout .inv-form-section {
+  margin-bottom: 0;
+}
+
+/* Bottom form actions bar */
+.inv-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 48px;
+  flex-wrap: wrap;
+}
 
 /* ── TOTALS SECTION ────────────────────────────────────────── */
 .totals-section {
@@ -1112,7 +1192,38 @@ textarea.form-control {
 
   /* Invoice items table */
   .items-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .invoice-items-table { min-width: 680px; }
+  .invoice-items-table { min-width: 480px; }
+
+  /* New invoice form sections */
+  .inv-form-section-header { padding: 13px 16px; font-size: 13px; gap: 8px; }
+  .inv-form-section-body   { padding: 16px; }
+  .inv-form-section-icon   { width: 28px; height: 28px; border-radius: 6px; }
+
+  .form-grid-4 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px;
+  }
+
+  .inv-totals-layout {
+    flex-direction: column;
+  }
+  .inv-totals-layout .inv-form-section,
+  .inv-totals-layout .totals-panel {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inv-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .inv-form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .discount-inline { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .discount-inline .form-control { max-width: 100% !important; width: 100%; }
 
   /* Forms */
   .form-grid {
@@ -1216,5 +1327,12 @@ textarea.form-control {
 
   /* Totals grand total font */
   .grand-total-row .t-value { font-size: 17px; }
+
+  /* Invoice form: 4-col grid → single column on tiny screens */
+  .form-grid-4 {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .inv-form-section-header { font-size: 12px; padding: 12px 14px; }
 }
 

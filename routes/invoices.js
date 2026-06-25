@@ -65,36 +65,11 @@ router.get('/:id/print', (req, res) => {
   res.send(buildInvoiceHTML(merged, items, db.getAllSettings(), true)); // true = auto-print
 });
 
-// PDF DOWNLOAD — Generates and downloads a real PDF file
+// PDF DOWNLOAD — Opens print view (works on all devices including mobile)
 router.get('/:id/pdf', async (req, res) => {
-  const invoice = db.find('invoices', req.params.id);
-  if (!invoice) return res.status(404).send('Invoice not found');
-  const items   = db.filter('invoice_items', i => String(i.invoice_id) === String(req.params.id))
-                    .sort((a, b) => a.sort_order - b.sort_order);
-  const client  = invoice.client_id ? db.find('clients', invoice.client_id) : null;
-  const merged  = { ...invoice, client_gstin: client?.gstin || '', client_phone: client?.phone || '', client_email: client?.email || '' };
-  
-  const html = buildInvoiceHTML(merged, items, db.getAllSettings(), false);
-
-  try {
-    const puppeteer = require('puppeteer-core');
-    const browser = await puppeteer.launch({
-      executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdf = await page.pdf({ format: 'A4', printBackground: true });
-    await browser.close();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Invoice-${invoice.invoice_number}.pdf"`);
-    res.end(Buffer.from(pdf));
-  } catch (err) {
-    console.error('PDF generation error:', err);
-    res.status(500).send('Error generating PDF');
-  }
+  // Redirect to print view which auto-triggers browser print dialog
+  // This is mobile-safe and works without Puppeteer/headless browser
+  res.redirect(`/api/invoices/${req.params.id}/print`);
 });
 
 // All routes below require auth
@@ -269,16 +244,21 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
 
   const taxLabel = esc(settings.tax_label || 'GST');
 
-  const rows = items.map((item, i) => `
+  // Check if any item has GST
+  const hasGST = items.some(item => parseFloat(item.tax_pct) > 0);
+
+  const rows = items.map((item, i) => {
+    const showTaxCell = parseFloat(item.tax_pct) > 0;
+    return `
     <tr class="${i%2===0?'row-even':'row-odd'}">
       <td class="tc num-col">${i+1}</td>
       <td class="name-col">${esc(item.name)}</td>
-      <td class="desc-col">${esc(item.description||'')}</td>
       <td class="tc">${item.quantity}</td>
       <td class="tr">${fmt(item.unit_price)}</td>
-      <td class="tc">${item.tax_pct}%</td>
+      ${hasGST ? `<td class="tc">${showTaxCell ? item.tax_pct+'%' : '—'}</td>` : ''}
       <td class="tr total-col">${fmt(item.total)}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
   const bankRows = [
     ['Bank Name', settings.bank_name],
@@ -341,21 +321,21 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
   /* ── Items ── */
   .items-section{padding:24px 40px 0;}
   .items-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .items-table{width:100%;border-collapse:collapse;min-width:520px;}
+  .items-table{width:100%;border-collapse:collapse;min-width:400px;}
   .items-table thead tr{background:linear-gradient(135deg,#1F5F99 0%,#2B81C5 100%);}
-  .items-table th{padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.9);}
+  .items-table th{padding:12px 16px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.9);text-align:left;}
   .items-table td{padding:14px 16px;font-size:13px;color:#333;}
   .row-even{background:#fff;}
   .row-odd{background:#f4f8fc;}
   .items-table tr{border-bottom:1px solid #e2eaf2;}
-  .num-col{width:40px;text-align:center;color:#888;}
+  .num-col{width:64px;text-align:center;color:#888;font-weight:600;}
   .name-col{font-weight:600;}
-  .desc-col{color:#555;font-size:11px;}
   .total-col{font-weight:700;color:#1F5F99;}
   .tc{text-align:center;}
   .tr{text-align:right;}
 
-  /* ── Bank + Totals ── */
+  /* ── Items table header rendering (with conditional GST col) ── */
+
   .bottom-section{padding:24px 40px;display:flex;justify-content:space-between;align-items:flex-start;gap:32px;flex-wrap:wrap;margin-top:6px;}
   .bank-panel{flex:1;min-width:200px;}
   .totals-panel{min-width:260px;flex-shrink:0;}
@@ -374,11 +354,7 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
   .grand-label{color:rgba(255,255,255,0.9);font-weight:700;font-size:15px;}
   .grand-value{color:white;font-weight:800;font-size:22px;}
 
-  /* ── Notes ── */
-  .notes-section{padding:0 40px 24px;}
-  .notes-box{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px 18px;}
-  .notes-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#78350f;margin-bottom:6px;}
-  .notes-body{font-size:13px;color:#92400e;line-height:1.6;}
+
 
   /* ── Footer ── */
   .inv-footer{background:linear-gradient(135deg,#1F5F99 0%,#2B81C5 100%);padding:24px 40px;display:flex;justify-content:space-between;align-items:center;margin-top:auto;flex-wrap:wrap;gap:16px;}
@@ -490,14 +466,16 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
       <table class="items-table">
         <thead>
           <tr>
-            ${['#','Service / Product','Description','Qty','Unit Price',taxLabel+'%','Total'].map((h,i) => {
-              const cls = i===0||i===3||i===5?'tc':(i>=4?'tr':'');
+            ${['Sr. No.','Service / Product','Qty','Unit Price',...(hasGST?[taxLabel+'%']:[]),'Total'].map((h,i) => {
+              const isNum = i===0;
+              const isRight = i>=3&&!isNum;
+              const cls = isNum?'tc':(i===2?'tc':(i===3?'tr':(i===4&&hasGST?'tc':'tr')));
               return `<th class="${cls}">${h}</th>`;
             }).join('')}
           </tr>
         </thead>
         <tbody>
-          ${rows || '<tr><td colspan="7" style="padding:20px;text-align:center;color:#888;font-size:12px;">No items added</td></tr>'}
+          ${rows || `<tr><td colspan="${hasGST?6:5}" style="padding:20px;text-align:center;color:#888;font-size:12px;">No items added</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -532,15 +510,6 @@ function buildInvoiceHTML(invoice, items, settings, autoPrint = false) {
       </div>
     </div>
   </div>
-
-  <!-- NOTES -->
-  ${invoice.notes ? `
-  <div class="notes-section">
-    <div class="notes-box">
-      <div class="notes-title">Notes</div>
-      <div class="notes-body">${esc(invoice.notes)}</div>
-    </div>
-  </div>` : ''}
 
   <!-- FOOTER -->
   <div class="inv-footer">

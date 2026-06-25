@@ -487,17 +487,21 @@ async function renderInvoiceDetail(id) {
     const inv = await api(`/invoices/${id}`);
     const content = document.getElementById('pageContent');
 
-    const itemRows = inv.items.map((item, i) => `
+    const hasGST = inv.items.some(i => parseFloat(i.tax_pct) > 0);
+
+    const itemRows = inv.items.map((item, i) => {
+      const showTax = parseFloat(item.tax_pct) > 0;
+      return `
       <tr>
-        <td>${i+1}</td>
+        <td class="td-center" style="color:var(--text-muted);font-size:12px;">${i+1}</td>
         <td class="td-bold">${item.name}</td>
-        <td class="td-muted">${item.description || ''}</td>
         <td class="td-center">${item.quantity}</td>
         <td class="td-right">${fmt(item.unit_price)}</td>
-        <td class="td-center">${item.tax_pct}%</td>
-        <td class="td-right td-bold">${fmt(item.total)}</td>
+        ${hasGST ? `<td class="td-center">${showTax ? item.tax_pct+'%' : '<span style="color:var(--text-muted)">—</span>'}</td>` : ''}
+        <td class="td-right td-bold" style="color:var(--primary);">${fmt(item.total)}</td>
       </tr>
-    `).join('');
+      `;
+    }).join('');
 
     content.innerHTML = `
       <div class="page-header">
@@ -513,7 +517,8 @@ async function renderInvoiceDetail(id) {
             ).join('')}
           </select>
           <button class="btn btn-outline" onclick="navigate('invoices/${id}/edit')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
-          <button class="btn btn-primary" onclick="openPDF(${id}, '${inv.invoice_number}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Preview PDF</button>
+          <button class="btn btn-outline" onclick="downloadPDFDirect(${id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</button>
+          <button class="btn btn-primary" onclick="openPDF(${id}, '${inv.invoice_number}')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Preview</button>
           <button class="btn btn-ghost" onclick="duplicateInvoice(${id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Duplicate</button>
         </div>
       </div>
@@ -544,9 +549,10 @@ async function renderInvoiceDetail(id) {
         <div class="table-container">
           <table>
             <thead><tr>
-              <th>#</th><th>Service</th><th>Description</th>
-              <th class="td-center">Qty</th><th class="td-right">Unit Price</th>
-              <th class="td-center">${globalSettings.tax_label||'GST'}%</th><th class="td-right">Total</th>
+              <th class="td-center" style="width:50px;">Sr. No.</th><th>Service / Product</th>
+              <th class="td-center" style="width:80px;">Qty</th><th class="td-right" style="width:120px;">Unit Price</th>
+              ${hasGST ? `<th class="td-center" style="width:90px;">${globalSettings.tax_label||'GST'}%</th>` : ''}
+              <th class="td-right" style="width:120px;">Total</th>
             </tr></thead>
             <tbody>${itemRows}</tbody>
           </table>
@@ -560,8 +566,6 @@ async function renderInvoiceDetail(id) {
           </div>
         </div>
       </div>
-
-      ${inv.notes ? `<div class="card"><div class="card-header"><span class="card-title">Notes</span></div><div class="card-body" style="color:var(--text-secondary);">${inv.notes}</div></div>` : ''}
     `;
 
     // Status change
@@ -619,20 +623,29 @@ async function renderInvoiceForm(editId) {
       <div>
         <button class="btn btn-ghost btn-sm" onclick="history.back()" style="margin-bottom:8px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
         <h1 class="page-title">${isEdit ? 'Edit Invoice' : 'New Invoice'}</h1>
+        <p class="page-subtitle">${isEdit ? 'Update the invoice details below' : 'Fill in the details below to create a new invoice'}</p>
       </div>
       <div class="action-btns">
-        <button class="btn btn-ghost" onclick="saveInvoice('${isEdit ? editId : ''}', 'draft')">Save as Draft</button>
-        <button class="btn btn-primary btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', '${isEdit ? (inv.status||'unpaid') : 'unpaid'}')">
-          ${isEdit ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Update Invoice' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> Create Invoice'}
+        <button class="btn btn-ghost" onclick="saveInvoice('${isEdit ? editId : ''}', 'draft')">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save as Draft
+        </button>
+        <button class="btn btn-primary btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', '${isEdit ? (inv?.status||'unpaid') : 'unpaid'}')">
+          ${isEdit ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> Update Invoice' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> Create Invoice'}
         </button>
       </div>
     </div>
 
-    <!-- Invoice Details -->
-    <div class="card" style="margin-bottom:20px;">
-      <div class="card-header"><span class="card-title">Invoice Details</span></div>
-      <div class="card-body">
-        <div class="form-grid">
+    <!-- ── SECTION 1: Invoice Details ─────────────────────── -->
+    <div class="inv-form-section">
+      <div class="inv-form-section-header">
+        <div class="inv-form-section-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <span>Invoice Details</span>
+      </div>
+      <div class="inv-form-section-body">
+        <div class="form-grid form-grid-4">
           <div class="form-group">
             <label>Invoice Number</label>
             <input type="text" class="form-control" id="fInvNumber" value="${inv ? inv.invoice_number : nextNumber}" placeholder="INV-1001"/>
@@ -657,13 +670,19 @@ async function renderInvoiceForm(editId) {
       </div>
     </div>
 
-    <!-- Client Details -->
-    <div class="card" style="margin-bottom:20px;">
-      <div class="card-header">
-        <span class="card-title">Client Details</span>
-        <button class="btn btn-ghost btn-sm" onclick="openClientModal(null, true)">+ Add New Client</button>
+    <!-- ── SECTION 2: Client Details ──────────────────────── -->
+    <div class="inv-form-section">
+      <div class="inv-form-section-header">
+        <div class="inv-form-section-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span>Client Details</span>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="openClientModal(null, true)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add New Client
+        </button>
       </div>
-      <div class="card-body">
+      <div class="inv-form-section-body">
         <div class="form-grid">
           <div class="form-group">
             <label>Select Existing Client</label>
@@ -684,78 +703,90 @@ async function renderInvoiceForm(editId) {
       </div>
     </div>
 
-    <!-- Invoice Items -->
-    <div class="card" style="margin-bottom:20px;">
-      <div class="card-header">
-        <span class="card-title">Invoice Items</span>
-        <button class="btn btn-primary btn-sm" onclick="addItem()">+ Add Item</button>
+    <!-- ── SECTION 3: Invoice Items ────────────────────────── -->
+    <div class="inv-form-section">
+      <div class="inv-form-section-header">
+        <div class="inv-form-section-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </div>
+        <span>Invoice Items</span>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="addItem()">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Item
+        </button>
       </div>
-      <div class="card-body" style="padding:0;">
-        <div class="items-table-wrapper">
-          <table class="invoice-items-table">
-            <thead>
-              <tr>
-                <th style="width:40px;">#</th>
-                <th style="min-width:160px;">Service / Product</th>
-                <th style="min-width:140px;">Description</th>
-                <th style="width:90px;" class="td-center">Qty</th>
-                <th style="width:130px;" class="td-right">Unit Price</th>
-                <th style="width:90px;" class="td-center">${globalSettings.tax_label||'GST'}%</th>
-                <th style="width:120px;" class="td-right">Total</th>
-                <th style="width:40px;"></th>
-              </tr>
-            </thead>
-            <tbody id="itemsBody"></tbody>
-          </table>
+      <div class="items-table-wrapper">
+        <table class="invoice-items-table">
+          <thead>
+            <tr>
+              <th style="width:52px;text-align:center;">Sr. No.</th>
+              <th style="min-width:200px;">Service / Product</th>
+              <th style="width:90px;text-align:center;">Qty</th>
+              <th style="width:130px;text-align:right;">Unit Price</th>
+              <th style="width:100px;text-align:center;">${globalSettings.tax_label||'GST'}%</th>
+              <th style="width:130px;text-align:right;">Total</th>
+              <th style="width:44px;"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SECTION 4: Discount & Totals ───────────────────── -->
+    <div class="inv-totals-layout">
+      <div class="inv-form-section" style="flex:1;min-width:0;">
+        <div class="inv-form-section-header">
+          <div class="inv-form-section-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <span>Discount</span>
+        </div>
+        <div class="inv-form-section-body">
+          <div class="discount-inline">
+            <label class="discount-inline-label">Discount Type</label>
+            <select id="discType" class="form-control" style="max-width:160px;" onchange="recalc()">
+              <option value="percentage" ${(!inv||inv.discount_type==='percentage')?'selected':''}>Percentage (%)</option>
+              <option value="fixed" ${(inv&&inv.discount_type==='fixed')?'selected':''}>Fixed Amount</option>
+            </select>
+            <label class="discount-inline-label" style="margin-left:16px;">Value</label>
+            <input type="number" id="discValue" class="form-control" value="${inv ? inv.discount_value : 0}" min="0" step="0.01" oninput="recalc()" style="max-width:120px;"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="totals-panel" style="min-width:300px;">
+        <div class="totals-row">
+          <span class="t-label">Subtotal</span>
+          <span class="t-value" id="tSubtotal">${fmt(0)}</span>
+        </div>
+        <div class="totals-row" id="tGstRow" style="display:none;">
+          <span class="t-label" id="tGstLabel">${globalSettings.tax_label||'GST'} Total</span>
+          <span class="t-value" id="tTax">${fmt(0)}</span>
+        </div>
+        <div class="totals-row" id="tDiscountRow" style="display:none;">
+          <span class="t-label">Discount</span>
+          <span class="t-value" id="tDiscount" style="color:var(--danger);">- ${fmt(0)}</span>
+        </div>
+        <div class="totals-row grand-total-row">
+          <span class="t-label">Grand Total</span>
+          <span class="t-value" id="tGrand">${fmt(0)}</span>
         </div>
       </div>
     </div>
 
-    <!-- Totals & Discount -->
-    <div class="invoice-totals-row" style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap;margin-bottom:20px;">
-      <div class="card" style="flex:1;min-width:240px;">
-        <div class="card-header"><span class="card-title">Notes</span></div>
-        <div class="card-body">
-          <textarea class="form-control" id="fNotes" rows="4" placeholder="Payment terms, thank you message, etc.">${inv ? escVal(inv.notes) : ''}</textarea>
-        </div>
-      </div>
-
-      <div class="totals-section" style="margin:0;">
-        <div class="totals-panel">
-          <div class="totals-row">
-            <span class="t-label">Subtotal</span>
-            <span class="t-value" id="tSubtotal">${fmt(0)}</span>
-          </div>
-          <div class="totals-row">
-            <span class="t-label">${globalSettings.tax_label||'GST'} Total</span>
-            <span class="t-value" id="tTax">${fmt(0)}</span>
-          </div>
-          <div class="totals-row">
-            <span class="t-label">
-              Discount
-              <div class="discount-row" style="margin-top:4px;">
-                <select id="discType" onchange="recalc()">
-                  <option value="percentage" ${(!inv||inv.discount_type==='percentage')?'selected':''}>%</option>
-                  <option value="fixed" ${(inv&&inv.discount_type==='fixed')?'selected':''}>Fixed</option>
-                </select>
-                <input type="number" id="discValue" value="${inv ? inv.discount_value : 0}" min="0" step="0.01" oninput="recalc()"/>
-              </div>
-            </span>
-            <span class="t-value" id="tDiscount" style="color:var(--danger)">- ${fmt(0)}</span>
-          </div>
-          <div class="totals-row grand-total-row">
-            <span class="t-label">Grand Total</span>
-            <span class="t-value" id="tGrand">${fmt(0)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:flex;justify-content:flex-end;gap:12px;padding-bottom:40px;">
+    <!-- ── Bottom Actions ─────────────────────────────────── -->
+    <div class="inv-form-actions">
       <button class="btn btn-ghost" onclick="history.back()">Cancel</button>
-      <button class="btn btn-ghost btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', 'draft')">Save as Draft</button>
-      <button class="btn btn-primary btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', '${isEdit ? (inv?.status||'unpaid') : 'unpaid'}')">
-        ${isEdit ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Update Invoice' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="20 6 9 17 4 12"/></svg> Create Invoice'}
+      <button class="btn btn-ghost btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', 'draft')">
+        Save as Draft
+      </button>
+      <button class="btn btn-outline btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', '${isEdit ? (inv?.status||'unpaid') : 'unpaid'}')">
+        ${isEdit ? 'Update Only' : 'Create Only'}
+      </button>
+      <button class="btn btn-primary btn-lg" onclick="saveInvoice('${isEdit ? editId : ''}', '${isEdit ? (inv?.status||'unpaid') : 'unpaid'}', true)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        ${isEdit ? 'Update & Download PDF' : 'Save & Download PDF'}
       </button>
     </div>
   `;
@@ -770,7 +801,7 @@ async function renderInvoiceForm(editId) {
 }
 
 function newItem() {
-  return { name: '', description: '', quantity: 1, unit_price: 0, tax_pct: 0 };
+  return { name: '', quantity: 1, unit_price: 0, tax_pct: 0 };
 }
 
 function addItem() {
@@ -795,28 +826,43 @@ function renderItemsTable() {
     const total    = lineBase + taxAmt;
 
     return `
-      <tr>
-        <td style="text-align:center;color:var(--text-muted);font-size:12px;">${idx+1}</td>
-        <td><input type="text" placeholder="Service name" value="${escVal(item.name)}"
+      <tr data-idx="${idx}">
+        <td style="text-align:center;color:var(--text-muted);font-size:12px;font-weight:600;">${idx+1}</td>
+        <td><input type="text" placeholder="Service / Product name" value="${escVal(item.name)}"
               oninput="invoiceItems[${idx}].name=this.value"/></td>
-        <td><input type="text" placeholder="Description" value="${escVal(item.description||'')}"
-              oninput="invoiceItems[${idx}].description=this.value"/></td>
-        <td><input type="number" min="0" step="0.01" value="${item.quantity}"
-              style="text-align:center;"
-              oninput="invoiceItems[${idx}].quantity=parseFloat(this.value)||0;recalc();"/></td>
-        <td><input type="number" min="0" step="0.01" value="${item.unit_price}"
-              style="text-align:right;"
-              oninput="invoiceItems[${idx}].unit_price=parseFloat(this.value)||0;recalc();"/></td>
-        <td><input type="number" min="0" max="100" step="0.01" value="${item.tax_pct}"
-              style="text-align:center;"
-              oninput="invoiceItems[${idx}].tax_pct=parseFloat(this.value)||0;recalc();"/></td>
-        <td class="item-total-cell">${fmt(total)}</td>
         <td style="text-align:center;">
-          <button class="btn-remove-item" onclick="removeItem(${idx})" title="Remove">×</button>
+          <input type="number" min="0.01" step="0.01" value="${item.quantity}"
+              style="text-align:center;"
+              oninput="invoiceItems[${idx}].quantity=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
+        </td>
+        <td>
+          <input type="number" min="0" step="0.01" value="${item.unit_price}"
+              style="text-align:right;"
+              oninput="invoiceItems[${idx}].unit_price=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
+        </td>
+        <td style="text-align:center;">
+          <input type="number" min="0" max="100" step="0.01" value="${item.tax_pct||0}"
+              style="text-align:center;"
+              oninput="invoiceItems[${idx}].tax_pct=parseFloat(this.value)||0;updateRowTotal(${idx});recalc();"/>
+        </td>
+        <td class="item-total-cell" id="row-total-${idx}">${fmt(total)}</td>
+        <td style="text-align:center;">
+          <button class="btn-remove-item" onclick="removeItem(${idx})" title="Remove item">×</button>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+// Update only the total cell of a single row (fast, no full re-render)
+function updateRowTotal(idx) {
+  const item = invoiceItems[idx];
+  if (!item) return;
+  const base  = (parseFloat(item.quantity)||0) * (parseFloat(item.unit_price)||0);
+  const tax   = base * ((parseFloat(item.tax_pct)||0) / 100);
+  const total = base + tax;
+  const cell  = document.getElementById(`row-total-${idx}`);
+  if (cell) cell.textContent = fmt(total);
 }
 
 function recalc() {
@@ -838,10 +884,17 @@ function recalc() {
   const grand = subtotal + taxTotal - discAmount;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const show = (id, visible) => { const el = document.getElementById(id); if (el) el.style.display = visible ? '' : 'none'; };
+
   set('tSubtotal', fmt(subtotal));
   set('tTax',      fmt(taxTotal));
   set('tDiscount', `- ${fmt(discAmount)}`);
   set('tGrand',    fmt(grand));
+
+  // Conditional GST row — only show if there is any tax
+  show('tGstRow',      taxTotal > 0);
+  // Conditional Discount row — only show if there is a discount
+  show('tDiscountRow', discAmount > 0);
 }
 
 function onClientSelect(sel) {
@@ -851,7 +904,7 @@ function onClientSelect(sel) {
   document.getElementById('fClientAddress').value = (opt.dataset.address || '').trim();
 }
 
-async function saveInvoice(editId, statusOverride) {
+async function saveInvoice(editId, statusOverride, autoDownload = false) {
   const getValue = (id) => document.getElementById(id)?.value || '';
 
   const payload = {
@@ -864,7 +917,7 @@ async function saveInvoice(editId, statusOverride) {
     status:         statusOverride || getValue('fStatus'),
     discount_type:  getValue('discType'),
     discount_value: parseFloat(getValue('discValue')) || 0,
-    notes:          getValue('fNotes').trim(),
+    notes:          '',
     items:          invoiceItems
   };
 
@@ -872,6 +925,10 @@ async function saveInvoice(editId, statusOverride) {
   if (!payload.date)        { showToast('Invoice date is required', 'error'); return; }
   if (!payload.due_date)    { showToast('Due date is required', 'error'); return; }
   if (invoiceItems.length === 0) { showToast('Add at least one item', 'error'); return; }
+
+  // Validate items
+  const hasEmptyName = invoiceItems.some(i => !i.name?.trim());
+  if (hasEmptyName) { showToast('All items must have a service / product name', 'error'); return; }
 
   try {
     let saved;
@@ -881,6 +938,9 @@ async function saveInvoice(editId, statusOverride) {
     } else {
       saved = await api('/invoices', { method: 'POST', body: payload });
       showToast('Invoice created successfully!', 'success');
+    }
+    if (autoDownload) {
+      downloadPDFDirect(saved.id);
     }
     navigate(`invoices/${saved.id}`);
   } catch (err) {
@@ -1275,6 +1335,18 @@ function escAttr(str) {
 // Fix iframe preview auth: embed token in URL for preview route
 // The preview route needs token support — add query token check
 (function patchPreviewAuth() {
+  window.downloadPDFDirect = function(id) {
+    const printUrl = `/api/invoices/${id}/print`;
+    const a = document.createElement('a');
+    a.href = printUrl;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Print dialog will open. Use "Save as PDF" to download.', 'info');
+  };
+
   // Override openPDF to include token in preview iframe URL
   window.openPDF = function(id, number) {
     const modal = document.getElementById('pdfModal');
@@ -1283,35 +1355,18 @@ function escAttr(str) {
     frame.src = `/api/invoices/${id}/preview?_t=${Date.now()}`;
     modal.style.display = 'flex';
 
-    // "Download PDF" — fetches the real PDF from the server and downloads it
-    document.getElementById('pdfDownloadBtn').onclick = () => {
-      showToast('Generating PDF...', 'info');
-      fetch(`/api/invoices/${id}/pdf`)
-        .then(async r => {
-          if (!r.ok) throw new Error('PDF generation failed');
-          return r.blob();
-        })
-        .then(blob => {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Invoice-${number}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-          showToast('PDF downloaded successfully', 'success');
-        })
-        .catch(err => {
-          console.error(err);
-          showToast('Failed to download PDF', 'error');
-        });
-    };
+    // "Download PDF" — Opens the print view in a new tab so the user can Save as PDF.
+    document.getElementById('pdfDownloadBtn').onclick = () => downloadPDFDirect(id);
 
-    // "Print" button prints the iframe content directly
+    // "Print" button — tries iframe print first, falls back to new tab
     document.getElementById('pdfPrintBtn').onclick = () => {
-      const fw = frame.contentWindow;
-      if (fw) { fw.focus(); fw.print(); }
+      try {
+        const fw = frame.contentWindow;
+        if (fw) { fw.focus(); fw.print(); }
+        else throw new Error('no frame');
+      } catch {
+        window.open(`/api/invoices/${id}/print`, '_blank');
+      }
     };
   };
 })();
